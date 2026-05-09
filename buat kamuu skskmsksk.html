@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Universe: Rey & Meylin</title>
+    <!-- Tailwind CSS for Professional Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-pink: #ff8fab;
+            --secondary-pink: #fb6f92;
+            --bg-soft: #ffe5ec;
+            --pixel-black: #2b2d42;
+        }
+
+        body {
+            background-color: var(--bg-soft);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--pixel-black);
+            overflow-x: hidden;
+            margin: 0;
+            cursor: url('https://cdn-icons-png.flaticon.com/32/1077/1077035.png'), auto;
+        }
+
+        .pixel-font { font-family: 'VT323', monospace; }
+        .game-font { font-family: 'Press Start 2P', cursive; font-size: 10px; }
+
+        /* Pixel Art UI Elements */
+        .pixel-box {
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px rgba(0,0,0,1);
+            background: white;
+            position: relative;
+        }
+
+        .pixel-btn {
+            position: relative;
+            background: white;
+            border: 4px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            cursor: pointer;
+            transition: all 0.1s;
+            padding: 10px 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .pixel-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        .pixel-btn:hover {
+            background: var(--primary-pink);
+            color: white;
+        }
+
+        /* Sprite Animations */
+        @keyframes walk {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+
+        .walking { animation: walk 0.5s infinite; }
+        
+        .floating { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Screens */
+        .screen-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: #121212;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.8s ease;
+        }
+
+        .hidden-node { display: none !important; }
+        .fade-out { opacity: 0; pointer-events: none; }
+
+        /* Hearts */
+        .heart-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            animation: flyUp 4s linear forwards;
+        }
+
+        @keyframes flyUp {
+            0% { transform: translateY(100vh) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+
+        /* Characters Styles */
+        .char-tag {
+            font-family: 'VT323';
+            font-size: 1.2rem;
+            border: 2px solid black;
+            padding: 0 8px;
+            margin-top: 5px;
+            background: white;
+        }
+
+        /* Letter Style */
+        .letter-content {
+            background: #fff;
+            padding: 40px;
+            border-radius: 2px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.05);
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. INTRO SCREEN (ROBOT PIXEL) -->
+    <div id="intro-screen" class="screen-overlay">
+        <div class="max-w-xl text-center px-6">
+            <div class="floating mb-8 inline-block">
+                <!-- SVG Pixel Robot -->
+                <svg width="120" height="120" viewBox="0 0 24 24" style="image-rendering: pixelated;">
+                    <rect x="4" y="6" width="16" height="12" fill="#4b5563" />
+                    <rect x="6" y="8" width="12" height="8" fill="#9ca3af" />
+                    <rect id="eyeL" x="8" y="10" width="2" height="2" fill="#000" />
+                    <rect id="eyeR" x="14" y="10" width="2" height="2" fill="#000" />
+                    <rect x="10" y="14" width="4" height="1" fill="#000" />
+                    <rect x="11" y="4" width="2" height="2" fill="#ef4444" class="animate-pulse" />
+                </svg>
+            </div>
+            
+            <div class="pixel-box p-8 bg-white">
+                <p id="robot-text" class="pixel-font text-2xl mb-8">
+                    [SYSTEM_ONLINE]: <br> "Halo kamu yang paling dicintai. Ada data rahasia dari tuanku. Kamu mau lihat atau abaikan?"
+                </p>
+                <div class="flex flex-col gap-4">
+                    <button onclick="accessGranted()" class="pixel-btn bg-green-400 text-black text-xl py-3">
+                        LIHAT (Tuan akan bahagia!)
+                    </button>
+                    <button onclick="accessDenied()" id="deny-btn" class="pixel-btn bg-red-400 text-black text-lg py-2 opacity-70">
+                        Abaikan (Tuan akan kecewa)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APP CONTENT -->
+    <div id="main-content" class="hidden-node min-h-screen">
+        <!-- Persistent Navigation -->
+        <nav class="fixed top-0 w-full z-50 bg-white border-b-4 border-black p-4 flex justify-center gap-4">
+            <button onclick="nav('home')" class="game-font px-2 py-1">HOME</button>
+            <button onclick="nav('reasons')" class="game-font px-2 py-1">ABOUT YOU</button>
+            <button onclick="nav('letter')" class="game-font px-2 py-1">LETTER</button>
+        </nav>
+
+        <div class="pt-24 pb-12 px-4 max-w-5xl mx-auto">
+            
+            <!-- SECTION: HOME -->
+            <div id="sec-home" class="tab-content space-y-16">
+                <div class="text-center">
+                    <div class="flex justify-center gap-8 md:gap-16 mb-8">
+                        <!-- Rey -->
+                        <div class="flex flex-col items-center">
+                            <div class="walking">
+                                <svg width="80" height="80" viewBox="0 0 16 16" style="image-rendering: pixelated;">
+                                    <rect x="4" y="4" width="8" height="8" fill="#fbbf24" />
+                                    <rect x="5" y="6" width="2" height="2" fill="#000" />
+                                    <rect x="9" y="6" width="2" height="2" fill="#000" />
+                                    <rect x="7" y="9" width="2" height="1" fill="#ea580c" />
+                                    <rect x="5" y="12" width="1" height="2" fill="#000" />
+                                    <rect x="10" y="12" width="1" height="2" fill="#000" />
+                                </svg>
+                            </div>
+                            <span class="char-tag">Rey (chiki)</span>
+                        </div>
+                        <!-- Meylin -->
+                        <div class="flex flex-col items-center">
+                            <div class="walking" style="animation-delay: 0.2s">
+                                <svg width="80" height="80" viewBox="0 0 16 16" style="image-rendering: pixelated;">
+                                    <rect x="4" y="4" width="8" height="8" fill="#f472b6" />
+                                    <rect x="5" y="6" width="2" height="2" fill="#000" />
+                                    <rect x="9" y="6" width="2" height="2" fill="#000" />
+                                    <rect x="7" y="9" width="2" height="1" fill="#be185d" />
+                                    <rect x="6" y="2" width="4" height="2" fill="#fff" />
+                                    <rect x="5" y="12" width="1" height="2" fill="#000" />
+                                    <rect x="10" y="12" width="1" height="2" fill="#000" />
+                                </svg>
+                            </div>
+                            <span class="char-tag">Meylin (lilin)</span>
+                        </div>
+                    </div>
+                    <h1 class="text-4xl md:text-7xl font-extrabold text-pink-600 mb-6 uppercase tracking-tight">
+                        Hai Kesayanganku! 💖
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto font-medium">
+                        Makasih ya udah mau mampir ke dunia kecil aku. Di sini cuma ada kita berdua (plus dua ayam lucu ini). Scroll terus ya!
+                    </p>
+                </div>
+
+                <!-- Chat Box Dialogue -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="pixel-box p-6 bg-yellow-50">
+                        <p class="game-font text-yellow-600 mb-2">REY_TALK:</p>
+                        <p class="pixel-font text-2xl">"Aku udah bilangin ke Lilin, kalau kamu itu orang paling cantik di folder memori aku!"</p>
+                    </div>
+                    <div class="pixel-box p-6 bg-pink-50">
+                        <p class="game-font text-pink-600 mb-2">MEYLIN_TALK:</p>
+                        <p class="pixel-font text-2xl">"Tuan aku sayang banget sama kamu tahu... dia nulis kode ini sampe begadang demi kamu!"</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: REASONS (THE LONG PART) -->
+            <div id="sec-reasons" class="tab-content hidden-node space-y-10">
+                <h2 class="game-font text-2xl text-center mb-10">Kenapa Aku Sayang Kamu?</h2>
+                
+                <div class="space-y-6">
+                    <!-- Reason Cards -->
+                    <div class="pixel-box p-6 bg-white flex items-start gap-4">
+                        <div class="text-4xl">01.</div>
+                        <div>
+                            <h4 class="font-bold text-xl">Sifat Kamu yang Sabar</h4>
+                            <p class="text-gray-600 mt-2">Makasih ya udah selalu sabar ngadepin aku yang kadang random, kadang childish, atau kadang nyebelin. Kamu itu jangkar aku pas dunia lagi berisik banget.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pixel-box p-6 bg-white flex items-start gap-4">
+                        <div class="text-4xl">02.</div>
+                        <div>
+                            <h4 class="font-bold text-xl">Senyum Kamu Itu Moodbooster</h4>
+                            <p class="text-gray-600 mt-2">Setiap kali aku capek, liat foto kamu atau denger ketawa kamu itu beneran kayak nge-charge batre sampe 100% lagi. Gak bohong.</p>
+                        </div>
+                    </div>
+
+                    <div class="pixel-box p-6 bg-white flex items-start gap-4">
+                        <div class="text-4xl">03.</div>
+                        <div>
+                            <h4 class="font-bold text-xl">Cara Kamu Dengerin Cerita Aku</h4>
+                            <p class="text-gray-600 mt-2">Aku ngerasa divalidasi banget tiap cerita sama kamu. Makasih udah jadi tempat ternyaman buat aku pulang dan numpahin segala keluh kesah aku.</p>
+                        </div>
+                    </div>
+
+                    <div class="pixel-box p-6 bg-white flex items-start gap-4">
+                        <div class="text-4xl">04.</div>
+                        <div>
+                            <h4 class="font-bold text-xl">Dukungan Kamu yang Tanpa Batas</h4>
+                            <p class="text-gray-600 mt-2">Kamu orang pertama yang selalu bilang 'kamu pasti bisa' pas aku sendiri ngerasa gak mampu. Kamu motivasi terbesar aku buat jadi versi lebih baik.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8 text-center bg-black text-white pixel-box">
+                    <p class="pixel-font text-3xl">"Intinya, dunia aku jauh lebih berwarna semenjak ada kamu di dalamnya."</p>
+                </div>
+            </div>
+
+            <!-- SECTION: LETTER (THE DEEPEST PART) -->
+            <div id="sec-letter" class="tab-content hidden-node">
+                <div class="pixel-box bg-white p-8 md:p-16 relative">
+                    <div class="absolute -top-4 -right-4 bg-red-500 text-white p-2 px-4 border-2 border-black rotate-12 font-bold">TOP SECRET</div>
+                    
+                    <div class="letter-content text-gray-800">
+                        <h3 class="text-3xl font-black mb-10 border-b-4 border-pink-200 pb-4 italic">Surat Terbuka Buat Sayangku...</h3>
+                        
+                        <div class="space-y-6">
+                            <p>Hai kamu...</p>
+                            <p>Aku nulis ini sambil senyum-senyum sendiri ngebayangin muka kamu pas baca ini. Aku tahu kita mungkin bukan pasangan yang sempurna di mata orang lain, tapi di mata aku, kita itu kombinasi paling pas yang pernah ada.</p>
+                            <p>Makasih ya sudah mau bertahan sejauh ini. Aku tahu aku banyak kurangnya. Kadang aku telat bales chat, kadang aku lupa hal kecil, atau kadang aku terlalu fokus sama duniaku sendiri. Tapi satu hal yang perlu kamu tahu: kamu selalu jadi prioritas tertinggi di list hidup aku.</p>
+                            <p>Aku pengen kita lewatin banyak hal bareng-bareng. Aku pengen nemenin kamu pas kamu lagi seneng banget, dan aku pengen jadi orang pertama yang meluk kamu pas kamu lagi ngerasa sedih. Kita tumbuh bareng ya? Jangan pernah ngerasa sendirian, karena ada aku yang bakal selalu support kamu 24/7.</p>
+                            <p>Kamu itu beneran kayak 'home' buat aku. Tempat dimana aku bisa jadi diriku sendiri tanpa takut di-judge. Tempat dimana aku ngerasa aman dan disayang.</p>
+                            <p>I love you more than this code can show. I love you more than Rey and Meylin love their pixel seeds. I love you, yesterday, today, and forever.</p>
+                            
+                            <div class="mt-20">
+                                <p>Selamanya milikmu,</p>
+                                <p class="text-3xl font-black text-pink-600 mt-2">Aku yang Sayang Kamu ❤️</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center p-10 mt-10 space-y-6">
+            <button onclick="rainHearts()" class="pixel-btn bg-white text-pink-500 text-xl font-bold">KIRIM HATI UNTUKKU ❤️</button>
+            <p class="game-font opacity-30">Pixel Universe v2.0 | Rey & Meylin Project</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- 1. Robot Eye Tracking ---
+        document.addEventListener('mousemove', (e) => {
+            const eyeL = document.getElementById('eyeL');
+            const eyeR = document.getElementById('eyeR');
+            if(eyeL && eyeR) {
+                const x = (e.clientX / window.innerWidth - 0.5) * 4;
+                const y = (e.clientY / window.innerHeight - 0.5) * 2;
+                eyeL.setAttribute('x', 8 + x);
+                eyeR.setAttribute('x', 14 + x);
+            }
+        });
+
+        // --- 2. Intro Decision Logic ---
+        let denyCount = 0;
+        function accessDenied() {
+            denyCount++;
+            const btn = document.getElementById('deny-btn');
+            const speech = document.getElementById('robot-text');
+            
+            if(denyCount === 1) {
+                speech.innerText = "[ERROR]: Kamu serius? Tuan aku udah capek-capek coding lho...";
+                btn.innerText = "Beneran mau nolak?";
+            } else if(denyCount === 2) {
+                speech.innerText = "[CRITICAL]: Rey (chiki) sama Meylin (lilin) bakal nangis kalo kamu nolak!";
+                btn.style.transform = "scale(0.5)";
+            } else {
+                alert("Gak boleh nolak! Akses dipaksa dibuka karena tuanku sayang banget sama kamu!");
+                accessGranted();
+            }
+        }
+
+        function accessGranted() {
+            document.getElementById('intro-screen').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('intro-screen').classList.add('hidden-node');
+                document.getElementById('main-content').classList.remove('hidden-node');
+                rainHearts();
+            }, 800);
+        }
+
+        // --- 3. Navigation ---
+        function nav(sectionId) {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden-node'));
+            document.getElementById('sec-' + sectionId).classList.remove('hidden-node');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- 4. Visual Effects ---
+        function rainHearts() {
+            for(let i=0; i<30; i++) {
+                setTimeout(() => {
+                    const h = document.createElement('div');
+                    h.className = 'heart-particle';
+                    h.innerHTML = ['❤️','💖','🌸','✨'][Math.floor(Math.random()*4)];
+                    h.style.left = Math.random() * 100 + 'vw';
+                    h.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                    document.body.appendChild(h);
+                    setTimeout(() => h.remove(), 4000);
+                }, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>
